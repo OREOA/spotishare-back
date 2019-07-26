@@ -15,23 +15,18 @@ router.post('/:hash', (req, res) => {
         return res.status(400).send('Invalid hash')
     }
 
-    if (req.body.songId.slice(0, 14) === "spotify:track:") {
-        return host.spotifyApi.getSongById(req.body.songId.slice(14))
-            .then(responseObject => {
-                if (responseObject.statusCode === 200) {
-                    if (host.songQueue.includes(responseObject.body)) {
-                        return res.send('Hyvää juhannusta', 418)
-                    }
-                    return res.json(host.addSong(responseObject.body))
-                } else {
-                    return res.send('Song id not found', 400)
+    return host.spotifyApi.getSongById(req.body.songId)
+        .then(responseObject => {
+            if (responseObject.statusCode === 200) {
+                if (host.songQueue.includes(responseObject.body)) {
+                    return res.status(418).send('Hyvää juhannusta')
                 }
-            })
-            .catch(err => res.send(err))
-    } else {
-        return res.send('Invalid input', 400)
-    }
-
+                return res.json(host.addSong(responseObject.body))
+            } else {
+                return res.status(400).send('Song id not found')
+            }
+        })
+        .catch(err => res.send(err))
 })
 
 router.post('/removeNext/:hash', (req, res) => {
