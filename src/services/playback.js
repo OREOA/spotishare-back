@@ -51,8 +51,11 @@ exports.Playback = class Playback {
                 this.savedContext = res.body.context
             }
             this.currentSong = res.body.item
+            if (!this.currentSong) {
+                return
+            }
             this.currentProgress = res.body.progress_ms
-            const remainingDuration = res.body.item.duration_ms - res.body.progress_ms
+            const remainingDuration = this.currentSong.duration_ms - this.currentProgress
             console.log(`Listening to ${res.body.item.name} on ${res.body.device.name}(${res.body.device.type}). Next song in ${parseInt(remainingDuration / 1000) - 3}s`)
             console.log(`Songs still in queue: ${this.songQueue.map(song => "\n" + song.name)}`)
             if (remainingDuration < 3000) {
@@ -68,7 +71,6 @@ exports.Playback = class Playback {
         .catch(err => console.log(err.message))
 
     startInterval = () => {
-        console.log("starting interval")
         this.playbackInterval = true
         const interval = () => {
             if (this.playbackInterval) {
