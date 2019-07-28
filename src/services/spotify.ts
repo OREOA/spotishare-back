@@ -1,8 +1,14 @@
-const SpotifyWebApi = require('spotify-web-api-node')
-const config = require('../config')
+import SpotifyWebApi from 'spotify-web-api-node'
+import * as config from '../config'
+import { Song } from '../types/song'
 
-exports.SpotifyApi = class SpotifyApi {
-  constructor(accessToken, refreshToken) {
+export type Context = {
+  uri: string
+}
+
+export class SpotifyApi {
+  spotifyWebApi: SpotifyWebApi
+  constructor(accessToken: string, refreshToken: string) {
     this.spotifyWebApi = new SpotifyWebApi({
       clientId: config.clientId,
       clientSecret: config.clientSecret,
@@ -20,17 +26,18 @@ exports.SpotifyApi = class SpotifyApi {
       })
       .catch(err => console.log('Could not refresh access token', err))
   }
-  searchByQuery = (query) => this.spotifyWebApi.searchTracks(query)
+
+  searchByQuery = (query: string) => this.spotifyWebApi.searchTracks(query)
 
   getPlaybackState = () => this.spotifyWebApi.getMyCurrentPlaybackState()
 
-  playSongById = (songId) => this.spotifyWebApi.play({ "uris": [songId] })
+  playSongById = (songId: Song['id']) => this.spotifyWebApi.play({ "uris": [songId] })
 
-  playSongByContext = (context) => this.spotifyWebApi.play({ "context_uri": context.uri })
+  playSongByContext = (context: { uri: string }) => this.spotifyWebApi.play({ "context_uri": context.uri })
 
   setShuffle = () => this.spotifyWebApi.setShuffle({ "state": true })
 
-  getSongById = (songId) => this.spotifyWebApi.getTrack(songId)
+  getSongById = (songId: Song['id']) => this.spotifyWebApi.getTrack(songId)
 
   getUserInfo = () => this.spotifyWebApi.getMe()
 }

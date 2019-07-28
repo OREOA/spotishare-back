@@ -1,5 +1,5 @@
-const express = require('express')
-const { hostHandler } = require('../middlewares')
+import express from 'express'
+import { hostHandler } from '../middlewares'
 
 const router = express.Router()
 
@@ -83,4 +83,4 @@ router.post('/move', (req, res) => {
    res.sendStatus(200)
 })*/
 
-module.exports = router
+export default router

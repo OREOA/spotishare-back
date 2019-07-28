@@ -1,10 +1,9 @@
-const express = require('express')
-const { hostHandler } = require('../middlewares')
+import express from 'express'
+import { hostHandler } from '../middlewares'
 
 const router = express.Router()
 
 router.use(hostHandler)
-
 
 router.get('/', (req, res) => {
     const host = req.sessionHost
@@ -14,9 +13,9 @@ router.get('/', (req, res) => {
     }
 
     return host.spotifyApi.searchByQuery(req.query.searchQuery)
-        .then(responseObject => res.json(responseObject))
-        .catch(err => res.send(err))
+        .then((responseObject: {}) => res.json(responseObject))
+        .catch((err: Error) => res.send(err))
 })
 
 
-module.exports = router
+export default router

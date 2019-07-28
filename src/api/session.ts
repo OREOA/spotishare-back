@@ -1,5 +1,5 @@
-const express = require('express')
-const playbackController = require('../services/playbackController')
+import express from 'express'
+import * as playbackController from '../services/playbackController'
 
 const router = express.Router()
 
@@ -16,4 +16,4 @@ router.post('/', (req, res) => {
     res.json({ hash })
 })
 
-module.exports = router
+export default router

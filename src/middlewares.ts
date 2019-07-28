@@ -1,17 +1,20 @@
-const cache = require('memory-cache')
-const request = require('request')
-const config = require('./config')
+import { Request, Response, NextFunction } from 'express'
+
+import cache from 'memory-cache'
+import request from 'request'
+import * as config from './config'
+import ApiError from './util/apiError'
 
 const { getHostByHash } = require('./services/playbackController')
 
-function notFound(req, res, next) {
+export function notFound(req: Request, res: Response, next: NextFunction) {
   res.status(404)
   const error = new Error(`🔍 - Not Found - ${req.originalUrl}`)
   next(error)
 }
 
 // eslint-disable-next-line no-unused-vars */
-function errorHandler(err, req, res, next) {
+export function errorHandler(err: ApiError, req: Request, res: Response, next: NextFunction) {
   console.error(err)
   const statusCode = err.status
     ? err.status
@@ -26,11 +29,10 @@ function errorHandler(err, req, res, next) {
 }
 
 
-function authentication(req, res, next) {
+export function authentication(req: Request, res: Response, next: NextFunction) {
   try {
     if (!req.spotishare.access_token) {
-      const err = new Error('Not authorized')
-      err.status = 400
+      const err = new ApiError('Not authorized', 400)
       return next(err)
     }
 
@@ -69,8 +71,7 @@ function authentication(req, res, next) {
             (error, response, body) => {
               if (error) {
                 console.log(error)
-                const err = new Error('Failed to request new access token')
-                err.status = 400
+                const err = new ApiError('Failed to request new access token', 400)
                 return next(err)
               }
               const data = body && JSON.parse(body)
@@ -80,8 +81,7 @@ function authentication(req, res, next) {
                 req.spotishare.access_token = data.access_token
                 return next()
               } else {
-                const err = new Error('Failed to request new access token')
-                err.status = 400
+                const err = new ApiError('Failed to request new access token', 400)
                 return next(err)
               }
             }
@@ -95,7 +95,7 @@ function authentication(req, res, next) {
   }
 }
 
-function hostHandler(req, res, next) {
+export function hostHandler(req: Request, res: Response, next: NextFunction) {
   const session = req.method === 'GET' ? req.query.session : req.body.session
   if (!session) {
     return res.status(400).send('Missing session hash')
@@ -106,11 +106,4 @@ function hostHandler(req, res, next) {
   }
   req.sessionHost = host
   return next()
-}
-
-module.exports = {
-  notFound,
-  errorHandler,
-  authentication,
-  hostHandler
 }

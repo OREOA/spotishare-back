@@ -1,16 +1,16 @@
-const express = require('express')
-const morgan = require('morgan')
-const cors = require('cors')
-const helmet = require('helmet')
-const bodyParser = require('body-parser')
-const middlewares = require('./middlewares')
-const song = require('./api/song')
-const search = require('./api/search')
-const session = require('./api/session')
-const config = require('./config')
-const request = require('request')
-const clientSession = require('client-sessions')
-cookieParser = require('cookie-parser')
+import express from 'express'
+import morgan from 'morgan'
+import cors from 'cors'
+import helmet from 'helmet'
+import bodyParser from 'body-parser'
+import * as middlewares from './middlewares'
+import song from './api/song'
+import search from './api/search'
+import session from './api/session'
+import * as config from './config'
+import request from 'request'
+import clientSession from 'client-sessions'
+import cookieParser from 'cookie-parser'
 
 const app = express()
 
@@ -40,7 +40,7 @@ app.get('/login', (req, res) => {
         config.clientId +
         (scopes ? '&scope=' + encodeURIComponent(scopes) : '') +
         '&redirect_uri=' +
-        encodeURIComponent(config.redirectUri)
+        encodeURIComponent(config.redirectUri || '')
     )
 })
 
@@ -64,6 +64,9 @@ app.get('/ok', (req, res) => {
             const data = JSON.parse(body)
             req.spotishare.access_token = data.access_token
             req.spotishare.refresh_token = data.refresh_token
+            if (!config.frontUri) {
+                throw new Error('No config.frontUri defined!')
+            }
             res.redirect(config.frontUri)
         }
     )
@@ -95,5 +98,4 @@ app.use('/api/search', search)
 app.use(middlewares.notFound)
 app.use(middlewares.errorHandler)
 
-
-module.exports = app
+export default app
