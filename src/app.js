@@ -54,14 +54,16 @@ app.get('/ok', (req, res) => {
 
 app.use(middlewares.authentication)
 
-app.get('/api/me', (req, res) => {
+app.get('/api/me', (req, res, next) => {
     const token = req.spotishare.access_token
     const s = getSpotify({
         accessToken: token,
     })
-    s.getMe().then(({ body }) => {
-        res.json(body)
-    })
+    s.getMe()
+        .then(({ body }) => {
+            res.json(body)
+        })
+        .catch(next)
 })
 
 app.use('/api/song', song)

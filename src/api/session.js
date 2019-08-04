@@ -19,12 +19,15 @@ router.get('/:hash', (req, res) => {
     })
 })
 
-router.post('/', (req, res) => {
+router.post('/', (req, res, next) => {
     if (playbackController.getHostByRefreshToken(req.spotishare.refresh_token)) {
         return res.status(400).send('Active session already exists for host')
     }
-    const hash = playbackController.addHost(req.spotishare.access_token, req.spotishare.refresh_token)
-    res.json({ hash })
+    playbackController.addHost(req.spotishare.access_token, req.spotishare.refresh_token)
+        .then((hash) => {
+            res.json({ hash })
+        })
+        .catch(next)
 })
 
 router.delete('/', (req, res) => {

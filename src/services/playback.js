@@ -1,7 +1,8 @@
 const { SpotifyApi } = require('./spotifyApi')
 const songsService = require('./songsService')
+const EventEmitter = require('events')
 
-exports.Playback = class Playback {
+exports.Playback = class Playback extends EventEmitter {
     songQueue = []
     playbackInterval = false
     currentSong = null
@@ -9,13 +10,20 @@ exports.Playback = class Playback {
     savedContext = null
     owner = null
     constructor(accessToken, refreshToken, hash) {
+        super()
         this.spotifyApi = new SpotifyApi(accessToken, refreshToken)
         this.hash = hash
         this.startInterval()
 
         this.spotifyApi.getUserInfo()
-            .then(data => this.owner = data.body)
-            .catch(err => console.log(err))
+            .then(data => {
+                this.owner = data.body
+                this.emit('ready')
+            })
+            .catch(err => {
+                console.error(err)
+                this.emit('error', err)
+            })
     }
 
     terminate = () => {

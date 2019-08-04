@@ -2,11 +2,18 @@ const { Playback } = require('./playback')
 const crypto = require('crypto')
 let activeHosts = []
 
-exports.addHost = (accessToken, refreshToken) => {
+exports.addHost = (accessToken, refreshToken) => new Promise((resolve, reject) => {
     const hash = crypto.randomBytes(10).toString('hex')
-    activeHosts.push(new Playback(accessToken, refreshToken, hash))
-    return hash
-}
+    const playback = new Playback(accessToken, refreshToken, hash)
+    activeHosts.push(playback)
+    playback
+        .on('ready', () => {
+            resolve(hash)
+        })
+        .on('error', (error) => {
+            reject(error)
+        })
+})
 
 exports.deleteHost = host  => {
     host.terminate()
