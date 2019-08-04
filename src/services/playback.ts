@@ -1,7 +1,8 @@
-import { SpotifyApi, Context } from './spotify'
+import { Context, SpotifyApi } from './spotifyApi'
 import * as songsService from './songsService'
 import { Session } from '../types/session'
 import { Song } from '../types/song'
+import { User } from '../types/user'
 
 export class Playback {
     songQueue: Song[] = []
@@ -11,15 +12,20 @@ export class Playback {
     currentProgress: number = 0
     savedContext: Context | null = null
     spotifyApi: SpotifyApi
-    hostName: string | undefined
+    owner: User | null = null
     constructor(accessToken: string, refreshToken: string, hash: Session['hash']) {
         this.spotifyApi = new SpotifyApi(accessToken, refreshToken)
         this.hash = hash
         this.startInterval()
 
         this.spotifyApi.getUserInfo()
-            .then(data => this.hostName = data.body.display_name)
+            .then(data => this.owner = data.body)
             .catch(err => console.log(err))
+    }
+
+    terminate = () => {
+        this.stopInterval()
+        this.spotifyApi.terminate()
     }
 
     addSong = (song: Song) => {
@@ -33,12 +39,9 @@ export class Playback {
     }
 
     playNextSong = () => {
-        if (this.songQueue.length) {
-            const next = this.songQueue.shift()
-            const nextSongId = next ? next.uri : ''
-            // TODO: this?
-            // songsService.updateSongs(nextSongId)
-            console.log("Playing next song")
+        if (this.songQueue.length && this.songQueue.shift()) {
+            const nextSongId = this.songQueue.shift()!.id
+            // songsService.updateSongs(nextSongId.split(':')[2])
             return this.spotifyApi.playSongById(nextSongId)
                 .then(() => new Promise(resolve => setTimeout(resolve, 3000)))
                 .catch(err => console.log(err.message))
@@ -97,6 +100,10 @@ export class Playback {
             }
         }
         interval()
+    }
+
+    stopInterval = () => {
+        this.playbackInterval = false
     }
 }
 

@@ -1,20 +1,18 @@
-import { Request, Response, NextFunction } from 'express'
+import express, { RequestHandler, ErrorRequestHandler } from 'express'
 
 import cache from 'memory-cache'
-import request from 'request'
-import * as config from './config'
+import getSpotify from './services/spotify'
 import ApiError from './util/apiError'
+import { getHostByHash } from './services/playbackController'
 
-const { getHostByHash } = require('./services/playbackController')
-
-export function notFound(req: Request, res: Response, next: NextFunction) {
+export const notFound: RequestHandler = (req, res, next) => {
   res.status(404)
   const error = new Error(`🔍 - Not Found - ${req.originalUrl}`)
   next(error)
 }
 
 // eslint-disable-next-line no-unused-vars */
-export function errorHandler(err: ApiError, req: Request, res: Response, next: NextFunction) {
+export const errorHandler: ErrorRequestHandler = (err: ApiError, req, res, next) => {
   console.error(err)
   const statusCode = err.status
     ? err.status
@@ -28,74 +26,56 @@ export function errorHandler(err: ApiError, req: Request, res: Response, next: N
   })
 }
 
+const FIFTEEN_MINUTES = 15 * 60 * 1000
 
-export function authentication(req: Request, res: Response, next: NextFunction) {
+export const authentication: RequestHandler = async (req, res, next) => {
   try {
-    if (!req.spotishare.access_token) {
+    // @ts-ignore
+    const accessToken = req.spotishare.access_token
+    // @ts-ignore
+    const refreshToken = req.spotishare.refresh_token
+    if (!accessToken) {
       const err = new ApiError('Not authorized', 400)
       return next(err)
     }
 
-    if (cache.get(req.spotishare.access_token)) {
+    if (cache.get(accessToken)) {
       return next()
     }
 
-    request.get(
-      {
-        uri: 'https://api.spotify.com/v1/me',
-        headers: {
-          Authorization: `Bearer ${req.spotishare.access_token}`
-        }
-      },
-      (error, response, body) => {
-        if (response.statusCode === 200) {
-          cache.put(req.spotishare.access_token, true, 900000)
-          req.user = JSON.parse(body)
-          return next()
-        } else {
-          const authorization = Buffer.from(
-            `${config.clientId}:${config.clientSecret}`
-          ).toString('base64')
+    const spotify = getSpotify({
+      accessToken,
+      refreshToken
+    })
 
-          request.post(
-            {
-              uri: 'https://accounts.spotify.com/api/token',
-              headers: {
-                Authorization: `Basic ${authorization}`
-              },
-              form: {
-                grant_type: 'refresh_token',
-                refresh_token: req.spotishare.refresh_token
-              }
-            },
-            (error, response, body) => {
-              if (error) {
-                console.log(error)
-                const err = new ApiError('Failed to request new access token', 400)
-                return next(err)
-              }
-              const data = body && JSON.parse(body)
-              if (data.access_token) {
-                console.log(data.access_token)
-                cache.put(data.access_token, true, 900000)
-                req.spotishare.access_token = data.access_token
-                return next()
-              } else {
-                const err = new ApiError('Failed to request new access token', 400)
-                return next(err)
-              }
-            }
-          )
-        }
+    let me
+    try {
+      const { body } = await spotify.getMe()
+      me = body
+    } catch (e) {
+      try {
+        const { body } = await spotify.refreshAccessToken()
+        const { access_token } = body
+        cache.put(access_token, true, FIFTEEN_MINUTES)
+        spotify.setAccessToken(accessToken)
+        // @ts-ignore
+        req.spotishare.access_token = access_token
+        const { body: body2 } = await spotify.getMe()
+        me = body2
+      } catch (e2) {
+        const err = new ApiError('Failed to request new access token', 400)
+        return next(err)
       }
-    )
-
+    }
+    // @ts-ignore
+    req.user = me
+    next()
   } catch (error) {
     return next(error)
   }
 }
 
-export function hostHandler(req: Request, res: Response, next: NextFunction) {
+export const hostHandler: RequestHandler = (req, res, next) => {
   const session = req.method === 'GET' ? req.query.session : req.body.session
   if (!session) {
     return res.status(400).send('Missing session hash')
@@ -104,6 +84,7 @@ export function hostHandler(req: Request, res: Response, next: NextFunction) {
   if (!host) {
     return res.status(400).send('Invalid hash')
   }
+  // @ts-ignore
   req.sessionHost = host
   return next()
 }
