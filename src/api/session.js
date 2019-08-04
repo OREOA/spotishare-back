@@ -5,13 +5,18 @@ const router = express.Router()
 
 router.get('/', (req, res) => {
     const session = playbackController.getHostByRefreshToken(req.spotishare.refresh_token)
-    res.json(session)
+    res.json(session && {
+        owner: session.owner,
+        hash: session.hash
+    })
 })
 
 router.get('/:hash', (req, res) => {
-    const { hash } = req.params
-    const session = playbackController.getHostByHash(hash)
-    res.json(session || null)
+    const session = playbackController.getHostByHash(req.params.hash)
+    res.json(session && {
+        owner: session.owner,
+        hash: session.hash
+    })
 })
 
 router.post('/', (req, res) => {

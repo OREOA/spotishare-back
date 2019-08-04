@@ -23,7 +23,6 @@ exports.SpotifyApi = class SpotifyApi {
       })
       .catch(err => console.error('Could not refresh access token', err))
   }
-
   searchByQuery = (query) => this.spotifyWebApi.searchTracks(query)
 
   getPlaybackState = () => this.spotifyWebApi.getMyCurrentPlaybackState()
