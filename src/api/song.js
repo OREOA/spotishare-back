@@ -52,6 +52,20 @@ router.get('/', (req, res) => {
     })
 })
 
+router.post('/:id/vote', async (req, res) => {
+    const host = req.sessionHost
+    const { userId } = req.spotishare
+    const songId = req.params.id
+    if (!songId) {
+        return res.status(400).send('Song not found')
+    }
+    console.log(userId)
+    console.log(songId)
+    
+    return res.status(204).send()
+})
+
+
 /* needs to be refactored to use class based playback
 router.post('/move', (req, res) => {
    if (!req.params.hash) {
