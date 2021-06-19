@@ -10,6 +10,8 @@ exports.Playback = class Playback {
     currentProgress = 0
     savedContext = null
     owner = null
+    songVotes = []
+    artistVotes = []
     constructor(accessToken, refreshToken, hash, userId) {
         this.spotifyApi = new SpotifyApi(accessToken, refreshToken)
         this.hash = hash
@@ -36,7 +38,41 @@ exports.Playback = class Playback {
 
     addSong = (song) => this.songQueue.addSong(song)
 
-    voteSong = (songId, voterId) => this.songQueue.voteSong(songId, voterId)
+
+    voteSong = (songId, voterId) => {
+        const song = this.songQueue.findSongById(songId)
+        if (!song) {
+            throw new Error('Song not in queue')
+        }
+
+        if (song.votes.map(vote => vote.voterId).includes(voterId)) {
+            throw new Error(`User with id ${voterId} has already voted this song`)
+        } else {
+
+            // this sometimes generates more than 1 vote
+            const testingAloneWithoutFriends = true
+            if (testingAloneWithoutFriends) {
+                while (Math.random() > 0.5) {
+                    song.votes.push(Math.random().toString(36).substring(7))
+                }
+            }
+
+            // looks boilerplate-y, would be clearer with actual db
+            this.songQueue.voteSong(songId, voterId)
+            this.songVotes.push({
+                voterId,
+                songId,
+                timestamp: Date.now()
+            })
+            song.songObject.artists.forEach(artist => this.artistVotes.push({
+                voterId,
+                artistId: artist.id,
+                timestamp: Date.now()
+            }))
+            console.log(this.artistVotes)
+            console.log(this.songVotes)
+        }
+    }
 
     removeNextSong = () => this.songQueue.removeNextSong()
 
@@ -68,8 +104,8 @@ exports.Playback = class Playback {
             }
             this.currentProgress = res.body.progress_ms
             const remainingDuration = this.currentSong.duration_ms - this.currentProgress
-            console.log(`Listening to ${res.body.item.name} on ${res.body.device.name}(${res.body.device.type}). Next song in ${parseInt(remainingDuration / 1000) - 3}s`)
-            console.log(`Songs still in queue: ${this.songQueue.getSongs().map(song => "\n" + song.name)}`)
+            //console.log(`Listening to ${res.body.item.name} on ${res.body.device.name}(${res.body.device.type}). Next song in ${parseInt(remainingDuration / 1000) - 3}s`)
+            //console.log(`Songs still in queue: ${this.songQueue.getSongs().map(song => "\n" + song.name)}`)
             if (remainingDuration < 3000) {
                 console.log("Duration < 3s")
                 if (this.songQueue.getLength() > 0) {

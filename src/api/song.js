@@ -11,7 +11,11 @@ router.post('/', async (req, res) => {
     if (!songId) {
         return res.status(400).send('Invalid input')
     }
-    
+
+    if (host.songQueue.findSongById(songId)) {
+        return res.status(400).send('Song already in the queue')
+    }
+
     const { statusCode, body: song } = await host.spotifyApi.getSongById(songId)
     if (statusCode !== 200) {
         if (statusCode === 400) {
@@ -20,9 +24,6 @@ router.post('/', async (req, res) => {
         return res.status(500).send('Something went wrong')
     }
 
-    if (host.songQueue.hasSong(song)) {
-        return res.status(400).send('Song already in the queue')
-    }
     return res.json(host.addSong(song))
 })
 
