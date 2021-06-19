@@ -48,7 +48,7 @@ router.get('/', (req, res) => {
     return res.json({
         song: host.currentSong,
         progress: host.currentProgress,
-        queue: host.songQueue.getSongs()
+        queue: host.songQueue.getSongQueue()
     })
 })
 

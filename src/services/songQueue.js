@@ -1,9 +1,11 @@
 exports.SongQueue = class SongQueue {
     songs = []
-    
+
     getLength = () => this.songs.length
 
     getSongs = () => this.songs.map(song => song.songObject)
+
+    getSongQueue = () => this.songs
 
     addSong = (song) => this.songs.push({
         songObject: song,
@@ -28,19 +30,19 @@ exports.SongQueue = class SongQueue {
         if (song.votes.map(vote => vote.voterId).includes(voterId)) {
             throw new Error(`User with id ${voterId} has already voted this song`)
         } else {
-            const updatedSong = {
-                ...song,
-                votes: [
-                    ...song.votes,
-                    {
-                        voterId,
-                        isPositive: true
-                    }
-                ]
 
+            // this sometimes generates more than 1 vote
+            const testingAloneWithoutFriends = true
+            if (testingAloneWithoutFriends) {
+                while (Math.random() > 0.5) {
+                    song.votes.push(Math.random().toString(36).substring(7))
+                }
             }
-            this.songs = this.songs.map(song => song.songObject.id === songId ? updatedSong : song)
+
+            song.votes.push({ voterId })
+            this.orderSongs()
         }
-        console.log(this.songs)
     }
+
+    orderSongs = () => this.songs.sort((a,b) => b.votes.length - a.votes.length)
 }
