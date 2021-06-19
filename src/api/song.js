@@ -44,6 +44,16 @@ router.post('/next', async (req, res) => {
     return res.status(400).send('No songs in the list')
 })
 
+router.post('/recommendation', async (req, res) => {
+    const host = req.sessionHost
+    try {
+        await host.addRecommendation()
+        return res.status(204).send()
+    } catch (e) {
+        return res.status(400).send(e)
+    }
+})
+
 router.get('/', (req, res) => {
     const host = req.sessionHost
     return res.json({
