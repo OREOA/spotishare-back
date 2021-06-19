@@ -2,6 +2,8 @@ const { SpotifyApi } = require('./spotifyApi')
 const { getMe } = require('./spotify')
 const songsService = require('./songsService')
 const { SongQueue } = require('./songQueue')
+const groupBy = require('lodash/groupBy')
+
 
 exports.Playback = class Playback {
     songQueue = new SongQueue()
@@ -38,6 +40,22 @@ exports.Playback = class Playback {
 
     addSong = (song) => this.songQueue.addSong(song)
 
+    addRecommendation = async () => {
+        //get array of most voted artists and songs
+        const artistsAndVotes = groupBy(this.artistVotes, 'artistId')
+        const topArtists = Object.keys(artistsAndVotes).sort((a, b) => artistsAndVotes[a].map(arr => arr.length) - artistsAndVotes[b].map(arr => arr.length)).slice(0, 5)
+        const songsAndVotes = groupBy(this.songVotes, 'songId')
+        const topSongs = Object.keys(songsAndVotes).sort((a, b) => songsAndVotes[a].map(arr => arr.length) - songsAndVotes[b].map(arr => arr.length)).slice(0, 5)
+
+        try {
+            const { body: { tracks: songsRecommendedByArtist } } = await this.spotifyApi.getRecommendations({seed_artists: topArtists})
+            this.addSong(songsRecommendedByArtist[0])
+            const { body: { tracks: songsRecommendedBySong } } = await this.spotifyApi.getRecommendations({seed_tracks: topSongs})
+            this.addSong(songsRecommendedBySong[0])
+        } catch (e) {
+            console.log(e)
+        }
+    }
 
     voteSong = (songId, voterId) => {
         const song = this.songQueue.findSongById(songId)
