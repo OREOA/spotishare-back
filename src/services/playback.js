@@ -1,9 +1,10 @@
 const { SpotifyApi } = require('./spotifyApi')
 const { getMe } = require('./spotify')
 const songsService = require('./songsService')
+const { SongQueue } = require('./songQueue')
 
 exports.Playback = class Playback {
-    songQueue = []
+    songQueue = new SongQueue()
     playbackInterval = false
     currentSong = null
     currentProgress = 0
@@ -33,18 +34,12 @@ exports.Playback = class Playback {
         this.spotifyApi.terminate()
     }
 
-    addSong = (song) => {
-        this.songQueue.push(song)
-    }
+    addSong = (song) => this.songQueue.addSong(song)
 
-    removeNextSong = () => {
-        if (this.songQueue.length > 0) {
-            return this.songQueue.shift()
-        }
-    }
+    removeNextSong = () => this.songQueue.removeNextSong()
 
     playNextSong = () => {
-        const nextSongId = this.songQueue.shift().uri
+        const nextSongId = this.removeNextSong().uri
         songsService.updateSongs(nextSongId.split(':')[2])
         console.log("Playing next song")
         return this.spotifyApi.playSongById(nextSongId)
@@ -72,10 +67,10 @@ exports.Playback = class Playback {
             this.currentProgress = res.body.progress_ms
             const remainingDuration = this.currentSong.duration_ms - this.currentProgress
             console.log(`Listening to ${res.body.item.name} on ${res.body.device.name}(${res.body.device.type}). Next song in ${parseInt(remainingDuration / 1000) - 3}s`)
-            console.log(`Songs still in queue: ${this.songQueue.map(song => "\n" + song.name)}`)
+            console.log(`Songs still in queue: ${this.songQueue.getSongs().map(song => "\n" + song.name)}`)
             if (remainingDuration < 3000) {
                 console.log("Duration < 3s")
-                if (this.songQueue.length > 0) {
+                if (this.songQueue.getLength() > 0) {
                     return this.playNextSong()
                 }
                 if (!res.body.context && this.savedContext) {

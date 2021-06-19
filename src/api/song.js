@@ -20,7 +20,7 @@ router.post('/', async (req, res) => {
         return res.status(500).send('Something went wrong')
     }
 
-    if (host.songQueue.includes(song)) {
+    if (host.songQueue.hasSong(song)) {
         return res.status(400).send('Song already in the queue')
     }
     return res.json(host.addSong(song))
@@ -28,7 +28,7 @@ router.post('/', async (req, res) => {
 
 router.post('/removeNext', (req, res) => {
     const host = req.sessionHost
-    if (host.songQueue.length > 0) {
+    if (host.songQueue.getLength() > 0) {
         return res.json(host.removeNextSong())
     }
     return res.status(400).send('No songs in the list')
@@ -36,7 +36,7 @@ router.post('/removeNext', (req, res) => {
 
 router.post('/next', async (req, res) => {
     const host = req.sessionHost
-    if (host.songQueue.length > 0) {
+    if (host.songQueue.getLength() > 0) {
         await host.playNextSong()
         return res.sendStatus(200)
     }
@@ -48,7 +48,7 @@ router.get('/', (req, res) => {
     return res.json({
         song: host.currentSong,
         progress: host.currentProgress,
-        queue: host.songQueue
+        queue: host.songQueue.getSongs()
     })
 })
 
