@@ -38,7 +38,7 @@ router.post('/next', async (req, res) => {
     const host = req.sessionHost
     if (host.songQueue.length > 0) {
         await host.playNextSong()
-        res.sendStatus(200)
+        return res.sendStatus(200)
     }
     return res.status(400).send('No songs in the list')
 })
