@@ -57,12 +57,15 @@ router.post('/:id/vote', async (req, res) => {
     const { userId } = req.spotishare
     const songId = req.params.id
     if (!songId) {
-        return res.status(400).send('Song not found')
+        return res.status(400).send('Song id missing')
     }
-    console.log(userId)
-    console.log(songId)
-    
-    return res.status(204).send()
+    try {
+        host.voteSong(songId, userId)
+        return res.status(204).send()
+    } catch (e) {
+        console.log(e)
+        return res.status(400).send(e)
+    }
 })
 
 

@@ -36,6 +36,8 @@ exports.Playback = class Playback {
 
     addSong = (song) => this.songQueue.addSong(song)
 
+    voteSong = (songId, voterId) => this.songQueue.voteSong(songId, voterId)
+
     removeNextSong = () => this.songQueue.removeNextSong()
 
     playNextSong = () => {
