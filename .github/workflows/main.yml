@@ -42,3 +42,15 @@ jobs:
         run: |
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+      - name: Update running container
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 794948722843.dkr.ecr.eu-central-1.amazonaws.com
+            docker stop spotishare
+            docker rm spotishare
+            docker pull 794948722843.dkr.ecr.eu-central-1.amazonaws.com/spotishare:latest
+            docker run -p 5000:5000 --env-file ~/.spotishare.env --name spotishare -d 794948722843.dkr.ecr.eu-central-1.amazonaws.com/spotishare:latest
