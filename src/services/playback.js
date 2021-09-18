@@ -40,7 +40,8 @@ exports.Playback = class Playback {
 
     addSong = (song) => this.songQueue.addSong(song)
 
-    addRecommendation = async () => {
+
+    getRecommendation = async () => {
         //get array of most voted artists and songs
         const artistsAndVotes = groupBy(this.artistVotes, 'artistId')
         const topArtists = Object.keys(artistsAndVotes).sort((a, b) => artistsAndVotes[b].map(arr => arr.length) - artistsAndVotes[a].map(arr => arr.length)).slice(0, 5)
@@ -48,10 +49,23 @@ exports.Playback = class Playback {
         const topSongs = Object.keys(songsAndVotes).sort((a, b) => songsAndVotes[b].map(arr => arr.length) - songsAndVotes[a].map(arr => arr.length)).slice(0, 5)
 
         try {
-            const { body: { tracks: songsRecommendedByArtist } } = await this.spotifyApi.getRecommendations({seed_artists: topArtists})
-            this.addSong(songsRecommendedByArtist[0])
-            const { body: { tracks: songsRecommendedBySong } } = await this.spotifyApi.getRecommendations({seed_tracks: topSongs})
-            this.addSong(songsRecommendedBySong[0])
+            if (Math.random() > 0.5) {
+                const { body: { tracks: songsRecommendedByArtist } } = await this.spotifyApi.getRecommendations({ seed_artists: topArtists })
+                return songsRecommendedByArtist[0]
+            } else {
+                const { body: { tracks: songsRecommendedBySong } } = await this.spotifyApi.getRecommendations({ seed_tracks: topSongs })
+                return songsRecommendedBySong[0]
+            }
+        } catch (e) {
+            console.log(e)
+        }
+
+    }
+
+    addRecommendation = async () => {
+        try {
+            const song = await this.getRecommendation()
+            this.addSong(song)
         } catch (e) {
             console.log(e)
         }

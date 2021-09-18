@@ -54,6 +54,18 @@ router.post('/recommendation', async (req, res) => {
     }
 })
 
+router.get('/recommendation', async (req, res) => {
+    const host = req.sessionHost
+    try {
+        console.log(host)
+        const recommendation = await host.getRecommendation()
+        return res.json(recommendation)
+    } catch (e) {
+        return res.status(400).send(e)
+    }
+})
+
+
 router.get('/', (req, res) => {
     const host = req.sessionHost
     return res.json({
