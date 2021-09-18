@@ -10,11 +10,11 @@ exports.SpotifyApi = class SpotifyApi {
     this.refreshTokenInterval = setInterval(() => this.getNewAccessToken(), FIFTY_MINUTES)
   }
 
-  terminate = () =>  {
+  terminate = () => {
     clearInterval(this.refreshTokenInterval)
     this.spotifyWebApi = null
   }
-  
+
   getNewAccessToken = () => {
     this.spotifyWebApi.refreshAccessToken()
       .then(data => {
@@ -36,4 +36,12 @@ exports.SpotifyApi = class SpotifyApi {
   getSongById = (songId) => this.spotifyWebApi.getTrack(songId)
 
   getUserInfo = () => this.spotifyWebApi.getMe()
+
+  // this doesn't seem to work with both artists and songs, problem with the wrapper?
+  getRecommendations = (seed) => this.spotifyWebApi.getRecommendations({
+    ...seed,
+    min_energy: 0.4,
+    min_danceability: 0.4,
+    min_popularity: 30
+  })
 }
