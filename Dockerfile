@@ -1,11 +1,11 @@
-FROM node:14
+FROM node:14 as base
 
 WORKDIR /usr/src/app
 
-COPY package*.json ./
+EXPOSE 5000
+
+COPY package* ./
+
 RUN npm install
 
 COPY . .
-EXPOSE 5000
-
-CMD [ "npm", "start" ]
