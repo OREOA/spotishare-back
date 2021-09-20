@@ -2,8 +2,6 @@ See: https://github.com/OREOA/spotishare-front
 
 # Spotishare backend
 
-[![Build Status](https://travis-ci.org/OREOA/spotishare-back.svg?branch=master)](https://travis-ci.org/OREOA/spotishare-back)
-
 ## Setup
 
 ```
@@ -32,4 +30,17 @@ npm run dev
 
 ```
 npm run audit
+```
+## Development with Docker
+1. Build image
+```
+make build
+```
+2. Start development server
+```
+make up
+```
+3. Stop development server
+```
+make down
 ```
