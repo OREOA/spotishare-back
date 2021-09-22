@@ -1,6 +1,5 @@
 const { SpotifyApi } = require('./spotifyApi')
 const { getMe } = require('./spotify')
-const songsService = require('./songsService')
 const { SongQueue } = require('./songQueue')
 const groupBy = require('lodash/groupBy')
 
@@ -101,8 +100,6 @@ exports.Playback = class Playback {
                 artistId: artist.id,
                 timestamp: Date.now()
             }))
-            console.log(this.artistVotes)
-            console.log(this.songVotes)
         }
     }
 
@@ -110,7 +107,6 @@ exports.Playback = class Playback {
 
     playNextSong = () => {
         const nextSongId = this.removeNextSong().uri
-        songsService.updateSongs(nextSongId.split(':')[2])
         console.log("Playing next song")
         return this.spotifyApi.playSongById(nextSongId)
             .then(() => new Promise(resolve => setTimeout(resolve, 3000)))

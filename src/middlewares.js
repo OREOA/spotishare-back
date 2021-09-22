@@ -54,12 +54,12 @@ async function authentication(req, res, next) {
   }
 }
 
-function hostHandler(req, res, next) {
+async function hostHandler(req, res, next) {
   const session = req.method === 'GET' ? req.query.session : req.body.session
   if (!session) {
     return res.status(400).send('Missing session hash')
   }
-  const host = getHostByHash(session)
+  const host = await getHostByHash(session)
   if (!host) {
     return res.status(400).send('Invalid hash')
   }

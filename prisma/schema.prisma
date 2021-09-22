@@ -1,0 +1,28 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Session {
+  id           String   @id
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         String   @db.VarChar(255)
+  accessToken  String
+  refreshToken String
+  Song         Song[]
+}
+
+model Song {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  songId    String
+  votes     Int?
+  session   Session  @relation(fields: [sessionId], references: [id])
+  sessionId String   @unique
+}
