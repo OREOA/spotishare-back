@@ -17,6 +17,7 @@ router.post('/', async (req, res) => {
     }
 
     const { statusCode, body: song } = await host.spotifyApi.getSongById(songId)
+    
     if (statusCode !== 200) {
         if (statusCode === 400) {
             return res.status(400).send('Song id not found')
@@ -24,7 +25,7 @@ router.post('/', async (req, res) => {
         return res.status(500).send('Something went wrong')
     }
 
-    return res.json(host.addSong(song))
+    return res.json(await host.addSong(song))
 })
 
 router.post('/removeNext', (req, res) => {
@@ -65,12 +66,13 @@ router.get('/recommendation', async (req, res) => {
 })
 
 
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
     const host = req.sessionHost
+    const queue = await host.songQueue.getSongQueue()
     return res.json({
         song: host.currentSong,
         progress: host.currentProgress,
-        queue: host.songQueue.getSongQueue()
+        queue: queue
     })
 })
 

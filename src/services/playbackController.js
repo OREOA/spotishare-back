@@ -24,6 +24,16 @@ exports.addHost = async (accessToken, refreshToken, userId) => {
 exports.deleteHost = async (host) => {
   host.terminate();
   activeHosts = activeHosts.filter((activeHost) => activeHost !== host);
+  await prisma.song.deleteMany({
+    where: {
+      sessionId: host.hash,
+    },
+  });
+  await prisma.artist.deleteMany({
+    where: {
+      sessionId: host.hash,
+    },
+  });
   await prisma.session.delete({
     where: {
       id: host.hash,
