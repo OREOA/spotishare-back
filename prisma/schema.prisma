@@ -16,6 +16,7 @@ model Session {
   refreshToken String
   Song         Song[]
   Artist       Artist[]
+  Vote         Vote[]
 }
 
 model Song {
@@ -26,11 +27,12 @@ model Song {
   name      String
   album     String
   albumImg  String
-  votes     Int?
-  artist    Artist   @relation(fields: [artistId], references: [id])
+  duration  Int
+  artist    Artist   @relation(fields: [artistId], references: [id], onDelete: Cascade)
   artistId  Int
-  session   Session  @relation(fields: [sessionId], references: [id])
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   sessionId String
+  Vote      Vote[]
 }
 
 model Artist {
@@ -39,8 +41,20 @@ model Artist {
   updatedAt DateTime @updatedAt
   name      String
   artistId  String
-  votes     Int?
-  session   Session  @relation(fields: [sessionId], references: [id])
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   sessionId String
   Song      Song[]
+  Vote      Vote[]
+}
+
+model Vote {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  user      String
+  songId    Int?
+  song      Song?    @relation(fields: [songId], references: [id], onDelete: Cascade)
+  artistId  Int?
+  artist    Artist?  @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  sessionId String
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 }

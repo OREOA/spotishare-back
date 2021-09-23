@@ -36,6 +36,8 @@ exports.SpotifyApi = class SpotifyApi {
   getSongById = (songId) => this.spotifyWebApi.getTrack(songId)
 
   getUserInfo = () => this.spotifyWebApi.getMe()
+  
+  skipToNext = () => this.spotifyWebApi.skipToNext()
 
   // this doesn't seem to work with both artists and songs, problem with the wrapper?
   getRecommendations = (seed) => this.spotifyWebApi.getRecommendations({

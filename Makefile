@@ -11,4 +11,4 @@ up-prod:
 	docker-compose up -d
 
 db-migrate:
-	docker exec -it spotishare npx prisma migrate dev
+	docker exec -it spotishare npx prisma migrate dev --name migrate

@@ -1,5 +1,6 @@
 const express = require('express')
 const { hostHandler } = require('../middlewares')
+const { convertCurrentSong } = require('../utils/convert')
 
 const router = express.Router()
 
@@ -14,7 +15,10 @@ router.get('/', (req, res) => {
     }
 
     return host.spotifyApi.searchByQuery(req.query.searchQuery)
-        .then(responseObject => res.json(responseObject))
+        .then(responseObject => {
+            const tracks = responseObject.body.tracks.items.map(convertCurrentSong)
+            return res.json(tracks)
+        })
         .catch(err => res.send(err))
 })
 

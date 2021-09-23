@@ -2,16 +2,12 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 exports.SongQueue = class SongQueue {
-  // TODO: make these into actual database
-  songs = [];
   hash = null;
   constructor(hash) {
     this.hash = hash;
   }
 
-  getLength = () => this.songs.length;
-
-  getSongs = () => this.songs.map((song) => song.songObject);
+  getLength = async () => await prisma.song.count();
 
   getSongQueue = async () => {
     const songs = await prisma.song.findMany({
@@ -20,12 +16,14 @@ exports.SongQueue = class SongQueue {
         name: true,
         album: true,
         albumImg: true,
-        votes: true,
+        duration: true,
         artist: {
           select: {
             name: true,
-            votes: true
           },
+        },
+        _count: {
+          select: { Vote: true },
         },
       },
       where: {
@@ -33,13 +31,14 @@ exports.SongQueue = class SongQueue {
       },
       orderBy: [
         {
-          createdAt: "desc",
+          createdAt: "asc",
         },
       ],
     });
-    console.log(songs);
 
-    return this.songs;
+    return songs
+      .map((song) => ({ ...song, votes: song._count.Vote }))
+      .sort((a, b) => b.votes - a.votes);
   };
 
   addSong = async (song) => {
@@ -50,14 +49,10 @@ exports.SongQueue = class SongQueue {
         name: song.name,
         album: song.album.name,
         albumImg: song.album.images[song.album.images.length - 1].url,
-        votes: 0,
+        duration: song.duration_ms,
         artistId,
         sessionId: this.hash,
       },
-    });
-    this.songs.push({
-      songObject: song,
-      votes: [],
     });
   };
 
@@ -76,27 +71,69 @@ exports.SongQueue = class SongQueue {
       data: {
         name: songArtist.name,
         artistId: songArtist.id,
-        votes: 0,
         sessionId: this.hash,
       },
     });
     return newArtist.id;
   };
 
-  findSongById = (songId) =>
-    this.songs.find((song) => song.songObject.id === songId);
+  getArtists = async () => {
+    const artists = await prisma.artist.findMany({
+      select: {
+        artistId: true,
+        _count: {
+          select: { Vote: true },
+        },
+      },
+      where: {
+        sessionId: this.hash,
+      },
+    });
 
-  removeNextSong = () => {
-    if (this.songs.length > 0) {
-      return this.songs.shift().songObject;
+    return artists
+      .map((artist) => ({ id: artist.artistId, votes: artist._count.Vote }))
+      .sort((a, b) => b.votes - a.votes);
+  };
+
+  findSongById = async (songId) =>
+    await prisma.song.findFirst({
+      where: {
+        sessionId: this.hash,
+        songId,
+      },
+      include: {
+        Vote: true,
+        artist: true,
+      },
+    });
+
+  removeNextSong = async () => {
+    const queue = await this.getSongQueue();
+    if (queue.length > 0) {
+      await prisma.song.deleteMany({
+        where: {
+          songId: queue[0].songId,
+          sessionId: this.hash,
+        },
+      });
+      return `spotify:track:${queue[0].songId}`;
     }
   };
 
-  voteSong = (songId, voterId) => {
-    const song = this.songs.find((song) => song.songObject.id === songId);
-    song.votes.push({ voterId });
-    this.orderSongs();
+  voteSong = async (song, voterId) => {
+    await prisma.vote.create({
+      data: {
+        songId: song.id,
+        user: voterId,
+        sessionId: this.hash,
+      },
+    });
+    await prisma.vote.create({
+      data: {
+        artistId: song.artist.id,
+        user: voterId,
+        sessionId: this.hash,
+      },
+    });
   };
-
-  orderSongs = () => this.songs.sort((a, b) => b.votes.length - a.votes.length);
 };
