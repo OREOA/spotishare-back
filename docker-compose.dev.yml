@@ -15,11 +15,6 @@ services:
     ports:
       - '5000:5000'
     command: npm run dev
-    entrypoint: ["/bin/sh","-c"]
-    command:
-    - |
-       npx prisma migrate dev
-       npm run dev
     depends_on:
       - db
   db:
