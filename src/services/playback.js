@@ -123,8 +123,7 @@ exports.Playback = class Playback {
     if (force) {
       this.spotifyApi.skipToNext();
     }
-    await new Promise((resolve) => setTimeout(resolve, 8000))
-    return response;
+    return new Promise((resolve) => setTimeout(resolve, 8000));
   };
 
   playSavedContext = () => {
@@ -152,8 +151,7 @@ exports.Playback = class Playback {
           this.currentSong.duration - this.currentProgress;
         //console.log(`Listening to ${res.body.item.name} on ${res.body.device.name}(${res.body.device.type}). Next song in ${parseInt(remainingDuration / 1000) - 8}s`)
         if (remainingDuration < 8000) {
-          console.log("Duration < 8s");
-          this.songQueue
+          return this.songQueue
             .getLength()
             .then((length) => {
               if (length > 0) {
