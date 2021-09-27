@@ -1,42 +1,31 @@
-const { Playback } = require("./playback");
 const { PrismaClient } = require("@prisma/client");
 const crypto = require("crypto");
+const { getMe } = require("../services/spotify");
 let activeHosts = [];
 
 const prisma = new PrismaClient();
 
 exports.addHost = async (accessToken, refreshToken, userId) => {
   const hash = crypto.randomBytes(10).toString("hex");
-  const playback = new Playback(accessToken, refreshToken, hash, userId);
-  activeHosts.push(playback);
+  const user = await getMe(accessToken);
+
   await prisma.session.create({
     data: {
       id: hash,
       user: userId,
+      name: user.display_name,
+      imageUrl: user.images && user.images[0].url,
       accessToken,
       refreshToken,
     },
   });
-  await playback.initOwner();
   return hash;
 };
 
-exports.deleteHost = async (host) => {
-  host.terminate();
-  activeHosts = activeHosts.filter((activeHost) => activeHost !== host);
-  /* await prisma.song.deleteMany({
-    where: {
-      sessionId: host.hash,
-    },
-  });
-  await prisma.artist.deleteMany({
-    where: {
-      sessionId: host.hash,
-    },
-  }); */
+exports.deleteHost = async (session) => {
   await prisma.session.delete({
     where: {
-      id: host.hash,
+      id: session.id,
     },
   });
 };
@@ -47,21 +36,19 @@ exports.getHostByHash = async (hash) => {
   if (activeHosts.find((host) => host.hash === hash)) {
     return activeHosts.find((host) => host.hash === hash);
   }
-  const session = await prisma.session.findUnique({
+  const session = await prisma.session.findFirst({
+    select: {
+      id: true,
+      user: true,
+      name: true,
+      imageUrl: true,
+    },
     where: {
       id: hash,
     },
   });
   if (session) {
-    const playback = new Playback(
-      session.accessToken,
-      session.refreshToken,
-      session.id,
-      session.userId
-    );
-    activeHosts.push(playback);
-    await playback.initOwner();
-    return playback;
+    return session;
   }
   return null;
 };
@@ -71,20 +58,20 @@ exports.getHostByUserId = async (userId) => {
     return activeHosts.find((host) => host.owner.id === userId);
   }
   const session = await prisma.session.findFirst({
+    select: {
+      id: true,
+      user: true,
+      name: true,
+      imageUrl: true,
+    },
     where: {
       user: userId,
     },
   });
+  console.log(session);
+
   if (session) {
-    const playback = new Playback(
-      session.accessToken,
-      session.refreshToken,
-      session.id,
-      session.userId
-    );
-    activeHosts.push(playback);
-    await playback.initOwner();
-    return playback;
+    return session;
   }
   return null;
 };
