@@ -14,7 +14,7 @@ exports.addHost = async (accessToken, refreshToken, userId) => {
       id: hash,
       user: userId,
       name: user.display_name,
-      imageUrl: user.images && user.images[0].url,
+      imageUrl: user.images.length > 0 ? user.images[0].url : null,
       accessToken,
       refreshToken,
     },
