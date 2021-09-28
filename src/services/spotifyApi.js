@@ -1,47 +1,42 @@
-const { getSpotify } = require('./spotify')
-
-const FIFTY_MINUTES = 50 * 60 * 1000
+const { getSpotify } = require("./spotify");
+const got = require("got");
 
 exports.SpotifyApi = class SpotifyApi {
   constructor(accessToken, refreshToken) {
-    this.spotifyWebApi = getSpotify()
-    this.spotifyWebApi.setAccessToken(accessToken)
-    this.spotifyWebApi.setRefreshToken(refreshToken)
-    this.refreshTokenInterval = setInterval(() => this.getNewAccessToken(), FIFTY_MINUTES)
+    this.spotifyWebApi = getSpotify();
+    this.spotifyWebApi.setAccessToken(accessToken);
+    this.spotifyWebApi.setRefreshToken(refreshToken);
   }
+  searchByQuery = (query) => this.spotifyWebApi.searchTracks(query);
 
-  terminate = () => {
-    clearInterval(this.refreshTokenInterval)
-    this.spotifyWebApi = null
-  }
+  getPlaybackState = () => this.spotifyWebApi.getMyCurrentPlaybackState();
 
-  getNewAccessToken = () => {
-    this.spotifyWebApi.refreshAccessToken()
-      .then(data => {
-        console.log('The access token has been refreshed!')
-        this.spotifyWebApi.setAccessToken(data.body['access_token'])
-      })
-      .catch(err => console.error('Could not refresh access token', err))
-  }
-  searchByQuery = (query) => this.spotifyWebApi.searchTracks(query)
+  playSongById = (songId) => this.spotifyWebApi.play({ uris: [songId] });
 
-  getPlaybackState = () => this.spotifyWebApi.getMyCurrentPlaybackState()
+  playSongByContext = (context) =>
+    this.spotifyWebApi.play({ context_uri: context.uri });
 
-  playSongById = (songId) => this.spotifyWebApi.play({ "uris": [songId] })
+  setShuffle = () => this.spotifyWebApi.setShuffle({ state: true });
 
-  playSongByContext = (context) => this.spotifyWebApi.play({ "context_uri": context.uri })
+  getSongById = (songId) => this.spotifyWebApi.getTrack(songId);
 
-  setShuffle = () => this.spotifyWebApi.setShuffle({ "state": true })
+  getUserInfo = () => this.spotifyWebApi.getMe();
 
-  getSongById = (songId) => this.spotifyWebApi.getTrack(songId)
+  skipToNext = () => this.spotifyWebApi.skipToNext();
 
-  getUserInfo = () => this.spotifyWebApi.getMe()
+  addToQueue = (songId) =>
+    got.post(`https://api.spotify.com/v1/me/player/queue?uri=${songId}`, {
+      headers: {
+        Authorization: `Bearer ${this.spotifyWebApi._credentials.accessToken}`,
+      },
+    });
 
   // this doesn't seem to work with both artists and songs, problem with the wrapper?
-  getRecommendations = (seed) => this.spotifyWebApi.getRecommendations({
-    ...seed,
-    min_energy: 0.4,
-    min_danceability: 0.4,
-    min_popularity: 30
-  })
-}
+  getRecommendations = (seed) =>
+    this.spotifyWebApi.getRecommendations({
+      ...seed,
+      min_energy: 0.4,
+      min_danceability: 0.4,
+      min_popularity: 30,
+    });
+};

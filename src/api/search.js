@@ -1,22 +1,21 @@
-const express = require('express')
-const { hostHandler } = require('../middlewares')
+const express = require("express");
+const { convertCurrentSong } = require("../utils/convert");
+const { SpotifyApi } = require("../services/spotifyApi");
 
-const router = express.Router()
+const router = express.Router();
 
-router.use(hostHandler)
+router.get("/", async (req, res) => {
+  if (!req.query.searchQuery) {
+    return res.status(400).send("Missing query parameter");
+  }
+  const spotify = new SpotifyApi(
+    req.spotishare.accessToken,
+    req.spotishare.refreshToken
+  );
 
+  const response = await spotify.searchByQuery(req.query.searchQuery);
+  const tracks = response.body.tracks.items.map(convertCurrentSong);
+  res.json(tracks);
+});
 
-router.get('/', (req, res) => {
-    const host = req.sessionHost
-
-    if (!req.query.searchQuery) {
-        return res.status(400).send('Missing query parameter')
-    }
-
-    return host.spotifyApi.searchByQuery(req.query.searchQuery)
-        .then(responseObject => res.json(responseObject))
-        .catch(err => res.send(err))
-})
-
-
-module.exports = router
+module.exports = router;

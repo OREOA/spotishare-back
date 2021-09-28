@@ -1,0 +1,62 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Session {
+  id           String   @id
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         String   @db.VarChar(255)
+  name         String?
+  imageUrl     String?
+  accessToken  String
+  refreshToken String
+  Song         Song[]
+  Artist       Artist[]
+  Vote         Vote[]
+}
+
+model Song {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  songId    String
+  name      String
+  album     String
+  albumImg  String
+  duration  Int
+  artist    Artist   @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  artistId  Int
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId String
+  Vote      Vote[]
+}
+
+model Artist {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String
+  artistId  String
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId String
+  Song      Song[]
+  Vote      Vote[]
+}
+
+model Vote {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  user      String
+  songId    Int?
+  song      Song?    @relation(fields: [songId], references: [id], onDelete: Cascade)
+  artistId  Int?
+  artist    Artist?  @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  sessionId String
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}

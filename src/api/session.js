@@ -1,39 +1,50 @@
-const express = require('express')
-const playbackController = require('../services/playbackController')
+const express = require("express");
+const playbackController = require("../services/playbackController");
 
-const router = express.Router()
+const router = express.Router();
 
-router.get('/', (req, res) => {
-    const session = playbackController.getHostByUserId(req.spotishare.userId)
-    res.json(session && {
-        owner: session.owner,
-        hash: session.hash
-    })
-})
+router.get("/", async (req, res) => {
+  const session = await playbackController.getHostByUserId(
+    req.spotishare.userId
+  );
 
-router.get('/:hash', (req, res) => {
-    const session = playbackController.getHostByHash(req.params.hash)
-    res.json(session && {
-        owner: session.owner,
-        hash: session.hash
-    })
-})
+  res.json(session);
+});
 
-router.post('/', (req, res, next) => {
-    if (playbackController.getHostByUserId(req.spotishare.userId)) {
-        return res.status(400).send('Active session already exists for host')
+router.get("/:hash", async (req, res) => {
+  const session = await playbackController.getHostByHash(req.params.hash);
+  res.json(session);
+});
+
+router.post("/", async (req, res, next) => {
+  const session = await playbackController.getHostByUserId(
+    req.spotishare.userId
+  );
+  if (session) {
+    return res.status(400).send("Active session already exists for host");
+  } else {
+    try {
+      const hash = await playbackController.addHost(
+        req.spotishare.accessToken,
+        req.spotishare.refreshToken,
+        req.spotishare.userId
+      );
+      return res.json({ id: hash });
+    } catch (error) {
+      console.log(error);
+      next();
     }
-    playbackController.addHost(req.spotishare.accessToken, req.spotishare.refreshToken, req.spotishare.userId)
-        .then(hash => res.json({ hash }))
-        .catch(next)
-})
+  }
+});
 
-router.delete('/', (req, res) => {
-    const session = playbackController.getHostByUserId(req.spotishare.userId)
-    if (session) {
-        playbackController.deleteHost(session)
-        return res.sendStatus(200)
-    }
-    res.status(400).send('No active session')
-})
-module.exports = router
+router.delete("/", async (req, res) => {
+  const session = await playbackController.getHostByUserId(
+    req.spotishare.userId
+  );
+  if (session) {
+    playbackController.deleteHost(session);
+    return res.sendStatus(200);
+  }
+  res.status(400).send("No active session");
+});
+module.exports = router;
