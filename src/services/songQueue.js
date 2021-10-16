@@ -3,14 +3,16 @@ const prisma = new PrismaClient();
 
 const getLength = async () => await prisma.song.count();
 
-const getSongQueue = async (hash) => {
+const getSongs = async (hash) => {
   const songs = await prisma.song.findMany({
     select: {
+      id: true,
       songId: true,
       name: true,
       album: true,
       albumImg: true,
       duration: true,
+      played: true,
       artist: {
         select: {
           name: true,
@@ -35,6 +37,11 @@ const getSongQueue = async (hash) => {
     .sort((a, b) => b.votes - a.votes);
 };
 
+const getSongQueue = async (hash) => {
+  const queue = await getSongs(hash);
+  return queue.filter((song) => !song.played);
+};
+
 const addSong = async (hash, song) => {
   const artistId = await getArtistId(hash, song);
   return await prisma.song.create({
@@ -46,6 +53,7 @@ const addSong = async (hash, song) => {
       duration: song.duration_ms,
       artistId,
       sessionId: hash,
+      played: false,
     },
   });
 };
@@ -104,10 +112,12 @@ const findSongById = async (hash, songId) =>
 const removeNextSong = async (hash) => {
   const queue = await getSongQueue(hash);
   if (queue.length > 0) {
-    await prisma.song.deleteMany({
+    await prisma.song.update({
       where: {
-        songId: queue[0].songId,
-        sessionId: hash,
+        id: queue[0].id,
+      },
+      data: {
+        played: true,
       },
     });
     return `spotify:track:${queue[0].songId}`;
@@ -133,6 +143,7 @@ const voteSong = async (hash, song, voterId) => {
 
 module.exports = {
   getLength,
+  getSongs,
   getSongQueue,
   addSong,
   getArtists,

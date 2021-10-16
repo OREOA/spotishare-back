@@ -3,7 +3,7 @@ const songQueue = require("./songQueue");
 const getRecommendation = async (hash, spotify) => {
   const artistsAndVotes = await songQueue.getArtists(hash);
   const topArtists = artistsAndVotes.map((artist) => artist.id).slice(0, 3);
-  const songsAndVotes = await songQueue.getSongQueue(hash);
+  const songsAndVotes = await songQueue.getSongs(hash);
   const topSongs = songsAndVotes.map((song) => song.songId).slice(0, 2);
 
   try {

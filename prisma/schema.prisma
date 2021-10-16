@@ -35,6 +35,7 @@ model Song {
   session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   sessionId String
   Vote      Vote[]
+  played    Boolean
 }
 
 model Artist {

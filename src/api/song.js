@@ -1,4 +1,5 @@
 const express = require("express");
+const _ = require("lodash");
 const { hostHandler } = require("../middlewares");
 const songQueue = require("../services/songQueue");
 const playbackService = require("../services/playback");
@@ -16,7 +17,10 @@ router.post("/", async (req, res) => {
   if (!songId) {
     return res.status(400).send("Invalid input");
   }
-  if (await songQueue.findSongById(hash, songId)) {
+  const existingSong = await songQueue.findSongById(hash, songId);
+  console.log(existingSong);
+
+  if (existingSong && !existingSong.played) {
     return res.status(400).send("Song already in the queue");
   }
 
@@ -90,7 +94,7 @@ router.get("/", async (req, res) => {
   return res.json({
     song: current && current.current,
     progress: current && current.progress,
-    queue: queue,
+    queue: queue.map((s) => _.omit(s, ["played", "id", "_count"])),
   });
 });
 
