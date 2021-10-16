@@ -102,6 +102,7 @@ const findSongById = async (hash, songId) =>
     where: {
       sessionId: hash,
       songId,
+      played: false,
     },
     include: {
       Vote: true,
