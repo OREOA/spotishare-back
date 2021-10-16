@@ -2,23 +2,19 @@ const songQueue = require("./songQueue");
 
 const getRecommendation = async (hash, spotify) => {
   const artistsAndVotes = await songQueue.getArtists(hash);
-  const topArtists = artistsAndVotes.map((artist) => artist.id).slice(0, 5);
+  const topArtists = artistsAndVotes.map((artist) => artist.id).slice(0, 3);
   const songsAndVotes = await songQueue.getSongQueue(hash);
-  const topSongs = songsAndVotes.map((song) => song.songId).slice(0, 5);
+  const topSongs = songsAndVotes.map((song) => song.songId).slice(0, 2);
+
   try {
-    if (Math.random() > 0.5) {
-      const {
-        body: { tracks: songsRecommendedByArtist },
-      } = await spotify.getRecommendations({
-        seed_artists: topArtists,
-      });
-      return songsRecommendedByArtist[0];
-    } else {
-      const {
-        body: { tracks: songsRecommendedBySong },
-      } = await spotify.getRecommendations({ seed_tracks: topSongs });
-      return songsRecommendedBySong[0];
-    }
+    const {
+      body: { tracks },
+    } = await spotify.getRecommendations({
+      seed_artists: topArtists,
+      seed_tracks: topSongs,
+    });
+
+    return tracks[0];
   } catch (e) {
     console.log(e);
   }

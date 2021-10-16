@@ -31,12 +31,13 @@ exports.SpotifyApi = class SpotifyApi {
       },
     });
 
-  // this doesn't seem to work with both artists and songs, problem with the wrapper?
+  // total max 5 seed values can be used (ex. 2+3)
   getRecommendations = (seed) =>
     this.spotifyWebApi.getRecommendations({
       ...seed,
       min_energy: 0.4,
       min_danceability: 0.4,
       min_popularity: 30,
+      limit: 5
     });
 };
