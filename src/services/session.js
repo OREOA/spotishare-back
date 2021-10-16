@@ -32,7 +32,6 @@ const updateToken = async (id, token) => {
 const pollSessions = async () => {
   const sessions = await getSessions();
   sessions
-    .filter((s) => !cache.get(`${s.id}_lock`))
     .map(async (session) => {
       const spotify = new SpotifyApi(session.accessToken, session.refreshToken);
       if (moment.duration(moment().diff(session.updatedAt)).asMinutes() > 50) {
@@ -52,7 +51,7 @@ const pollSessions = async () => {
         JSON.stringify({ current, progress: res.body.progress_ms })
       );
       const remainingDuration = current.duration - res.body.progress_ms;
-      if (remainingDuration < 8000) {
+      if (!cache.get(`${session.id}_lock`) && remainingDuration < 8000) {
         cache.put(`${session.id}_lock`, true, remainingDuration + 1000);
         const nextSongId = await songQueue.removeNextSong(session.id);
         if (nextSongId) {
