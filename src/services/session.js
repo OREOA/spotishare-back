@@ -6,6 +6,8 @@ const { convertCurrentSong } = require("../utils/convert");
 const songQueue = require("./songQueue");
 const prisma = new PrismaClient();
 
+const SESSION_INTERVAL = 2000;
+
 const getSessions = async () => {
   return await prisma.session.findMany({
     select: {
@@ -50,7 +52,10 @@ const pollSessions = async () => {
       JSON.stringify({ current, progress: res.body.progress_ms })
     );
     const remainingDuration = current.duration - res.body.progress_ms;
-    if (!cache.get(`${session.id}_lock`) && remainingDuration < 8000) {
+    if (
+      !cache.get(`${session.id}_lock`) &&
+      remainingDuration < SESSION_INTERVAL * 2
+    ) {
       cache.put(`${session.id}_lock`, true, remainingDuration + 1000);
       const nextSongId = await songQueue.removeNextSong(session.id);
       if (nextSongId) {
@@ -64,7 +69,9 @@ const pollSessions = async () => {
 const startInterval = () => {
   const interval = () => {
     pollSessions();
-    new Promise((resolve) => setTimeout(resolve, 4000)).then(interval);
+    new Promise((resolve) => setTimeout(resolve, SESSION_INTERVAL)).then(
+      interval
+    );
   };
   interval();
 };

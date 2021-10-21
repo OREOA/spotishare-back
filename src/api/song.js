@@ -78,7 +78,9 @@ router.get("/recommendation", async (req, res) => {
       spotify
     );
     if (recommendation) {
-      return res.json(convertCurrentSong(recommendation, true));
+      return res.json(
+        recommendation.map((song) => convertCurrentSong(song, true))
+      );
     }
     return res.sendStatus(204);
   } catch (e) {

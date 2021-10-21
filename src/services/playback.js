@@ -13,8 +13,7 @@ const getRecommendation = async (hash, spotify) => {
       seed_artists: topArtists,
       seed_tracks: topSongs,
     });
-
-    return tracks[0];
+    return tracks.slice(0, 1);
   } catch (e) {
     console.log(e);
   }
@@ -24,7 +23,7 @@ const addRecommendation = async (hash, spotify) => {
   try {
     const song = await getRecommendation(hash, spotify);
     if (song) {
-      await songQueue.addSong(hash, song);
+      await songQueue.addSong(hash, song[0]);
     }
   } catch (e) {
     console.log(e);
