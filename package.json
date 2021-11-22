@@ -44,7 +44,7 @@
     "lodash": "^4.17.15",
     "memory-cache": "^0.2.0",
     "moment": "^2.29.1",
-    "morgan": "^1.9.1",
+    "morgan": "^1.10.0",
     "prisma": "^3.1.1",
     "request": "^2.88.2",
     "spotify-web-api-node": "^4.0.0"
